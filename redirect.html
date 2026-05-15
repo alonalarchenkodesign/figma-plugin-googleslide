@@ -4,53 +4,78 @@
   <meta charset="UTF-8" />
   <title>Figma Plugin – Auth</title>
   <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+      background: #1e1e1e; color: #e0e0e0;
       display: flex; align-items: center; justify-content: center;
-      height: 100vh; margin: 0;
-      background: #1e1e1e; color: #e0e0e0; font-size: 14px;
+      min-height: 100vh; padding: 24px;
     }
-    .box { text-align: center; }
-    .spinner {
-      width: 32px; height: 32px; border: 3px solid #333;
-      border-top-color: #18a0fb; border-radius: 50%;
-      animation: spin .7s linear infinite; margin: 0 auto 16px;
+    .box {
+      background: #2c2c2c; border: 1px solid #444; border-radius: 12px;
+      padding: 32px; max-width: 520px; width: 100%; text-align: center;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    p { color: #888; font-size: 12px; margin-top: 8px; }
+    .icon { font-size: 40px; margin-bottom: 16px; }
+    h1 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    p  { font-size: 13px; color: #888; margin-bottom: 20px; line-height: 1.5; }
+    .token-box {
+      background: #1a1a1a; border: 1px solid #555; border-radius: 8px;
+      padding: 12px 14px; font-family: monospace; font-size: 11px;
+      color: #6ee7b7; word-break: break-all; text-align: left;
+      margin-bottom: 16px; line-height: 1.6; user-select: all;
+    }
+    .btn {
+      display: inline-block; padding: 10px 24px; border-radius: 7px;
+      font-size: 13px; font-weight: 500; cursor: pointer; border: none;
+      font-family: inherit; background: #18a0fb; color: #fff; transition: opacity .15s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn.copied { background: #1bc47d; }
+    .steps {
+      text-align: left; margin-bottom: 20px;
+      background: #252525; border-radius: 8px; padding: 14px 16px;
+    }
+    .steps p { color: #bbb; margin-bottom: 6px; font-size: 12px; }
+    .steps p:last-child { margin-bottom: 0; }
+    .steps strong { color: #e0e0e0; }
   </style>
 </head>
 <body>
-<div class="box">
-  <div class="spinner" id="spinner"></div>
-  <div id="msg">Authenticating…</div>
-  <p id="sub">This window will close automatically.</p>
+<div class="box" id="box">
+  <div class="icon">⏳</div>
+  <h1 id="title">Зчитую токен…</h1>
+  <p id="sub"></p>
 </div>
-
 <script>
-  // Parse access_token from URL hash (#access_token=...&token_type=Bearer&...)
   const hash   = window.location.hash.slice(1);
   const params = new URLSearchParams(hash);
   const token  = params.get('access_token');
   const error  = params.get('error');
+  const box = document.getElementById('box');
 
   if (error) {
-    document.getElementById('spinner').style.display = 'none';
-    document.getElementById('msg').textContent = 'Auth error: ' + error;
-    document.getElementById('sub').textContent = 'You can close this window.';
+    box.innerHTML = '<div class="icon">❌</div><h1>Помилка</h1><p>' + error + '</p>';
   } else if (token) {
-    // Send token back to the Figma plugin UI (opener window)
-    if (window.opener) {
-      window.opener.postMessage({ type: 'gs_auth_token', token }, '*');
-    }
-    document.getElementById('spinner').style.display = 'none';
-    document.getElementById('msg').textContent = 'Connected ✓';
-    document.getElementById('sub').textContent = 'You can close this window.';
-    setTimeout(() => window.close(), 1500);
+    box.innerHTML = `
+      <div class="icon">✅</div>
+      <h1>Авторизація успішна!</h1>
+      <div class="steps">
+        <p><strong>1.</strong> Скопіюй токен нижче</p>
+        <p><strong>2.</strong> Повернись у Figma → плагін</p>
+        <p><strong>3.</strong> Встав токен у поле і натисни <strong>Use</strong></p>
+      </div>
+      <div class="token-box" id="tk">${token}</div>
+      <button class="btn" id="cb" onclick="copy()">Скопіювати токен</button>
+    `;
   } else {
-    document.getElementById('spinner').style.display = 'none';
-    document.getElementById('msg').textContent = 'No token received.';
-    document.getElementById('sub').textContent = 'Please try again from the plugin.';
+    box.innerHTML = '<div class="icon">⚠️</div><h1>Токен не знайдено</h1><p>Спробуй ще раз із плагіна.</p>';
+  }
+
+  function copy() {
+    navigator.clipboard.writeText(token).then(() => {
+      document.getElementById('cb').textContent = 'Скопійовано ✓';
+      document.getElementById('cb').classList.add('copied');
+    });
   }
 </script>
 </body>
