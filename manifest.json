@@ -1,0 +1,17 @@
+{
+  "name": "Figma → Google Slides",
+  "id": "com.plugin.figma-to-gslides",
+  "api": "1.0.0",
+  "editorType": ["figma"],
+  "main": "code.js",
+  "ui": "ui.html",
+  "networkAccess": {
+    "allowedDomains": [
+      "https://accounts.google.com",
+      "https://www.googleapis.com",
+      "https://slides.googleapis.com",
+      "https://oauth2.googleapis.com",
+      "https://drive.googleapis.com"
+    ]
+  }
+}
